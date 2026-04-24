@@ -10,7 +10,9 @@ import logging
 import os
 import smtplib
 import ssl
+from email.headerregistry import Address
 from email.message import EmailMessage
+from email.policy import SMTP as SMTP_POLICY
 
 log = logging.getLogger("email_service")
 
@@ -36,10 +38,13 @@ def send_otp_email(to_email: str, name: str, otp_code: str) -> None:
     """Send a 6-digit OTP to `to_email`. Raises on SMTP failure."""
     sender, password = _get_credentials()
 
-    msg = EmailMessage()
+    sender_local, _, sender_domain = sender.partition("@")
+    to_local, _, to_domain = to_email.partition("@")
+
+    msg = EmailMessage(policy=SMTP_POLICY)
     msg["Subject"] = f"Your verification code: {otp_code}"
-    msg["From"] = f"College Event Portal <{sender}>"
-    msg["To"] = to_email
+    msg["From"] = Address("College Event Portal", sender_local, sender_domain)
+    msg["To"] = (Address(name, to_local, to_domain),)
     msg.set_content(
         f"""Hi {name},
 
