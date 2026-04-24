@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Browse events &middot; {{ site_name }}{% endblock %}
+{% block head_extra %}
+<style>
+  .poster-card {
+    border: none !important;
+    min-height: 300px;
+  }
+
+  .poster-card img {
+    transition: transform 0.4s ease;
+  }
+
+  .poster-card:hover img {
+    transform: scale(1.05);
+  }
+
+  .poster-overlay {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.2) 60%, rgba(0, 0, 0, 0.1) 100%);
+    transition: background 0.4s ease;
+  }
+
+  .poster-card:hover .poster-overlay {
+    background: rgba(0, 0, 0, 0.75);
+  }
+
+  .event-title {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  }
+
+  .details-reveal {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: all 0.4s ease;
+  }
+
+  .poster-card:hover .details-reveal {
+    max-height: 200px;
+    opacity: 1;
+    margin-top: 0.5rem;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="mb-3">
+  <span class="step-pill text-brand fw-semibold">Browse events</span>
+  <h1 class="h3 fw-bold mt-1 mb-0">What's happening on campus</h1>
+  <p class="text-muted small mb-0">
+    Approved events only. Click any card to register in one step.
+  </p>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+  <div class="col-auto">
+    <select name="when" class="form-select form-select-sm">
+      <option value="upcoming" {% if active_when=='upcoming' %}selected{% endif %}>Upcoming</option>
+      <option value="past" {% if active_when=='past' %}selected{% endif %}>Past</option>
+      <option value="all" {% if active_when=='all' %}selected{% endif %}>All time</option>
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="category" class="form-select form-select-sm">
+      <option value="">All categories</option>
+      {% for c in categories %}
+      <option value="{{ c }}" {% if active_category==c %}selected{% endif %}>
+        {{ c }}
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <button class="btn btn-sm btn-brand">Filter</button>
+  </div>
+</form>
+
+{% if events %}
+<div class="row g-3">
+  {% for row in events %}
+  {% set ev = row.event %}
+  <div class="col-md-6 col-lg-4">
+    <a href="{{ url_for('events.detail', event_id=ev.id) }}" class="text-decoration-none text-reset">
+      <div class="card card-stat p-0 h-100 poster-card position-relative overflow-hidden">
+        <img src="{{ url_for('static', filename='posters/' + ev.poster) }}"
+          class="w-100 h-100 object-fit-cover position-absolute top-0 start-0" alt="{{ ev.name }}">
+        <div class="poster-overlay d-flex flex-column p-3 h-100 w-100 position-relative z-1 text-white">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="badge bg-light text-brand fw-semibold shadow-sm">
+              {{ ev.category }}
+            </span>
+            {% if ev.is_competition %}
+            <span class="badge bg-warning text-dark shadow-sm">Competition</span>
+            {% endif %}
+          </div>
+          <div class="mt-auto">
+            <h5 class="fw-bold mb-1 event-title text-white">{{ ev.name }}</h5>
+            <div class="details-reveal">
+              <div class="small mb-2 text-white-50">
+                <i class="bi bi-calendar-event"></i>
+                {{ ev.date.strftime('%a, %b %d, %Y') }} &middot;
+                <i class="bi bi-geo-alt"></i> {{ ev.venue }}
+              </div>
+              <p class="small mb-3 text-light">
+                {{ (ev.description or '')[:100] }}{% if ev.description and ev.description|length > 100 %}…{% endif %}
+              </p>
+              <div class="d-flex justify-content-between align-items-center mt-auto">
+                <span class="text-white-50 small">
+                  <i class="bi bi-people"></i> {{ row.reg_count }} registered
+                </span>
+                {% if row.is_registered %}
+                <span class="badge bg-success">Registered</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card card-stat p-5 text-center">
+  <i class="bi bi-calendar-x text-muted" style="font-size: 2.4rem;"></i>
+  <h5 class="fw-semibold mt-3 mb-1">No events match these filters</h5>
+  <p class="text-muted small mb-0">Try a different category or time range.</p>
+</div>
+{% endif %}
+{% endblock %}

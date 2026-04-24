@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Welcome &middot; {{ site_name }}{% endblock %}
+
+{% block head_extra %}
+<style>
+  /* Custom modern landing page styles */
+  .hero-section {
+    padding: 6rem 0;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .hero-bg-blob {
+    position: absolute;
+    top: -10%;
+    right: -5%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(230,57,70,0.15) 0%, rgba(255,255,255,0) 70%);
+    z-index: 0;
+  }
+
+  .hero-bg-blob-2 {
+    position: absolute;
+    bottom: -10%;
+    left: -5%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(29,53,87,0.1) 0%, rgba(255,255,255,0) 70%);
+    z-index: 0;
+  }
+
+
+  .feature-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(230, 57, 70, 0.1);
+    color: var(--brand-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .btn-custom {
+    padding: 0.8rem 2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-primary-custom {
+    background: linear-gradient(135deg, var(--brand) 0%, #2a4b7c 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(29, 53, 87, 0.3);
+  }
+
+  .btn-primary-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(29, 53, 87, 0.4);
+    color: white;
+  }
+
+  .btn-outline-custom {
+    border: 2px solid var(--brand);
+    color: var(--brand);
+  }
+
+  .btn-outline-custom:hover {
+    background: var(--brand);
+    color: white;
+  }
+
+  /* Entrance animation */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+  }
+
+  .delay-1 { animation-delay: 0.2s; }
+  .delay-2 { animation-delay: 0.4s; }
+  .delay-3 { animation-delay: 0.6s; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+  <div class="hero-bg-blob"></div>
+  <div class="hero-bg-blob-2"></div>
+  
+  <div class="container hero-content">
+    <div class="row align-items-center g-5 mb-5">
+      <div class="col-lg-6 animate-fade-in">
+        <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-2 mb-3 fw-semibold letter-spacing-wide">
+          <i class="bi bi-stars me-1"></i> Welcome to the Portal
+        </span>
+        <h1 class="display-4 fw-bolder mb-4 lh-sm">
+          Discover & Manage <br>
+          <span class="gradient-text">College Events</span> <br>
+          Like Never Before.
+        </h1>
+        <p class="lead text-muted mb-5 pe-lg-4">
+          The ultimate intelligence portal for students and faculty. Propose new ideas, register with one click, and explore powerful analytics for every event happening on campus.
+        </p>
+        
+        <div class="d-flex flex-wrap gap-3">
+          <a href="{{ url_for('auth.register') }}" class="btn btn-custom btn-primary-custom">
+            Get Started <i class="bi bi-arrow-right ms-2"></i>
+          </a>
+          <a href="{{ url_for('auth.login') }}" class="btn btn-custom btn-outline-custom">
+            Sign In
+          </a>
+        </div>
+      </div>
+      
+      <div class="col-lg-6 animate-fade-in delay-1">
+        <div class="card card-stat p-2 text-center" style="transform: rotate(2deg);">
+          <img src="{{ url_for('static', filename='university.jpg') }}" alt="Chanakya University" class="img-fluid rounded" style="border: 4px solid rgba(255,255,255,0.8); width: 100%; object-fit: cover; max-height: 400px;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature Cards Section -->
+    <div class="row g-4 mt-4">
+      <div class="col-md-3 col-sm-6 animate-fade-in delay-2">
+        <div class="card card-stat p-4 h-100">
+          <div class="feature-icon">
+            <i class="bi bi-calendar2-event"></i>
+          </div>
+          <h4 class="fw-bold h5 mb-3 text-brand">Browse Events</h4>
+          <p class="text-muted small mb-0">
+            Easily filter upcoming events by category. Find what moves you.
+          </p>
+        </div>
+      </div>
+      
+      <div class="col-md-3 col-sm-6 animate-fade-in delay-2">
+        <div class="card card-stat p-4 h-100">
+          <div class="feature-icon">
+            <i class="bi bi-lightning-charge"></i>
+          </div>
+          <h4 class="fw-bold h5 mb-3 text-brand">One-Click Reg</h4>
+          <p class="text-muted small mb-0">
+            Found an event you like? Register instantly with a single click.
+          </p>
+        </div>
+      </div>
+      
+      <div class="col-md-3 col-sm-6 animate-fade-in delay-3">
+        <div class="card card-stat p-4 h-100">
+          <div class="feature-icon" style="background: rgba(29, 53, 87, 0.1); color: var(--brand);">
+            <i class="bi bi-lightbulb"></i>
+          </div>
+          <h4 class="fw-bold h5 mb-3 text-brand">Propose Ideas</h4>
+          <p class="text-muted small mb-0">
+            Submit your proposals directly to admins for fast approval.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-3 col-sm-6 animate-fade-in delay-3">
+        <div class="card card-stat p-4 h-100">
+          <div class="feature-icon" style="background: rgba(29, 53, 87, 0.1); color: var(--brand);">
+            <i class="bi bi-bar-chart-line"></i>
+          </div>
+          <h4 class="fw-bold h5 mb-3 text-brand">Rich Analytics</h4>
+          <p class="text-muted small mb-0">
+            Admins get deep insights into campus engagement.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}My Profile &middot; {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card card-stat p-4">
+      <div class="d-flex align-items-center mb-4">
+        <div class="me-4">
+          <img src="{{ url_for('static', filename='profiles/' + (current_user.profile_photo or 'default.png')) }}" 
+               alt="Profile Photo" 
+               class="rounded-circle border border-2 border-white shadow-sm" 
+               style="width: 100px; height: 100px; object-fit: cover; background: #fff;">
+        </div>
+        <div>
+          <h1 class="h3 fw-bold mb-1">{{ current_user.name }}</h1>
+          <p class="text-muted small mb-0">{{ current_user.email }}</p>
+          <span class="badge bg-light text-dark mt-2 text-uppercase">{{ current_user.role }}</span>
+        </div>
+      </div>
+
+      <form method="post" action="{{ url_for('auth.profile') }}" enctype="multipart/form-data" novalidate>
+        <div class="row g-3">
+          <div class="col-md-12">
+            <label class="form-label text-muted small">Update Profile Photo</label>
+            <input type="file" name="profile_photo" class="form-control" accept="image/*">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="name" value="{{ current_user.name }}" class="form-control" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Campus Email</label>
+            <input type="email" value="{{ current_user.email }}" class="form-control" readonly disabled>
+            <div class="form-text small">Email cannot be changed.</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Registration Number</label>
+            <input type="text" name="registration_number" value="{{ current_user.registration_number }}" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Department / Branch</label>
+            <select name="department" required class="form-select">
+              {% for d in departments %}
+                <option value="{{ d }}" {% if current_user.department == d %}selected{% endif %}>
+                  {{ d }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Gender</label>
+            <select name="gender" class="form-select">
+              <option value="" {% if not current_user.gender %}selected{% endif %}>Select Gender</option>
+              <option value="Male" {% if current_user.gender == 'Male' %}selected{% endif %}>Male</option>
+              <option value="Female" {% if current_user.gender == 'Female' %}selected{% endif %}>Female</option>
+              <option value="Other" {% if current_user.gender == 'Other' %}selected{% endif %}>Other</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Mobile Number</label>
+            <input type="text" name="mobile_number" value="{{ current_user.mobile_number }}" class="form-control" pattern="\d{10}" maxlength="10" title="Please enter exactly 10 digits">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-brand w-100 mt-4 py-2 fw-semibold">
+          Save Changes
+        </button>
+      </form>
+
+      <hr class="my-4">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h5 class="mb-1 h6 fw-semibold">Security</h5>
+          <p class="text-muted small mb-0">Change your account password. Requires OTP verification.</p>
+        </div>
+        <form method="post" action="{{ url_for('auth.change_password_request') }}">
+          <button type="submit" class="btn btn-outline-warning btn-sm">Change Password</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

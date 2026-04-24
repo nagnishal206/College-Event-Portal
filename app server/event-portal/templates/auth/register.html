@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Create account &middot; {{ site_name }}{% endblock %}
+
+
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-7">
+    <div class="card card-stat p-4 p-md-5">
+      <span class="step-pill text-brand fw-semibold">Create your account</span>
+      <h1 class="h3 fw-bold mt-2 mb-1">Join the portal</h1>
+      <p class="text-muted small mb-4">
+        We'll email you a 6-digit code to verify your address before activating
+        your account.
+      </p>
+
+      <form method="post" action="{{ url_for('auth.register') }}" novalidate>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Full name</label>
+            <input
+              name="name"
+              value="{{ form.name }}"
+              required
+              class="form-control"
+              placeholder="Jane Doe"
+            />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Campus email</label>
+            <input
+              type="email"
+              name="email"
+              value="{{ form.email }}"
+              required
+              class="form-control"
+              placeholder="you@college.edu"
+            />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Department/Branch</label>
+            <select name="department" required class="form-select">
+              <option value="" {% if not form.department %}selected{% endif %}>
+                Select your department
+              </option>
+              {% for d in departments %}
+                <option value="{{ d }}" {% if form.department == d %}selected{% endif %}>
+                  {{ d }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Registration Number</label>
+            <input
+              type="text"
+              name="registration_number"
+              value="{{ form.registration_number }}"
+              required
+              class="form-control"
+              placeholder="e.g. 21BCE0001"
+            />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Gender</label>
+            <select name="gender" required class="form-select">
+              <option value="" {% if not form.gender %}selected{% endif %}>Select Gender</option>
+              <option value="Male" {% if form.gender == 'Male' %}selected{% endif %}>Male</option>
+              <option value="Female" {% if form.gender == 'Female' %}selected{% endif %}>Female</option>
+              <option value="Other" {% if form.gender == 'Other' %}selected{% endif %}>Other</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Mobile Number</label>
+            <input
+              type="text"
+              name="mobile_number"
+              value="{{ form.mobile_number }}"
+              required
+              class="form-control"
+              placeholder="xxxxxxxxxx"
+              pattern="\d{10}"
+              maxlength="10"
+              title="Please enter exactly 10 digits"
+            />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label d-block">Role</label>
+            <div class="btn-group w-100" role="group" aria-label="Role">
+              <input
+                type="radio"
+                class="btn-check"
+                name="role"
+                id="role-user"
+                value="user"
+                {% if form.role != 'admin' %}checked{% endif %}
+                onchange="toggleAdminKey()"
+              />
+              <label class="btn btn-outline-secondary" for="role-user">Student</label>
+
+              <input
+                type="radio"
+                class="btn-check"
+                name="role"
+                id="role-admin"
+                value="admin"
+                {% if form.role == 'admin' %}checked{% endif %}
+                onchange="toggleAdminKey()"
+              />
+              <label class="btn btn-outline-secondary" for="role-admin">Admin</label>
+            </div>
+            <div class="form-text">
+              Admins can approve events and manage results.
+            </div>
+          </div>
+          
+          <div class="col-md-6" id="adminKeyContainer" style="display: {% if form.role == 'admin' %}block{% else %}none{% endif %};">
+            <label class="form-label">Admin Key</label>
+            <input
+              type="password"
+              name="admin_key"
+              class="form-control"
+              placeholder="Required for admin role"
+            />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Password</label>
+            <input
+              type="password"
+              name="password"
+              minlength="6"
+              required
+              class="form-control"
+              placeholder="At least 6 characters"
+            />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Confirm password</label>
+            <input
+              type="password"
+              name="confirm_password"
+              minlength="6"
+              required
+              class="form-control"
+              placeholder="Re-enter password"
+            />
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-brand w-100 mt-4 py-2 fw-semibold">
+          Send verification code
+        </button>
+      </form>
+
+      <hr class="my-4" />
+      <div class="text-center small text-muted">
+        Already have an account?
+        <a href="{{ url_for('auth.login') }}" class="text-brand fw-semibold">Sign in</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleAdminKey() {
+    const isAdmin = document.getElementById('role-admin').checked;
+    document.getElementById('adminKeyContainer').style.display = isAdmin ? 'block' : 'none';
+  }
+</script>
+{% endblock %}

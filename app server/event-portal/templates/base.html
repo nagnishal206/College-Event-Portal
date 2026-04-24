@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}{{ site_name }}{% endblock %}</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    />
+    <style>
+      :root {
+        --brand: #1d3557;
+        --brand-2: #e63946;
+        --brand-soft: #f1faee;
+      }
+      body { background: var(--brand-soft); }
+      .navbar-brand { font-weight: 700; letter-spacing: -0.01em; }
+      .brand-bg { background: var(--brand); color: #fff; }
+      .text-brand { color: var(--brand) !important; }
+      .btn-brand { background: var(--brand); color: #fff; border: none; }
+      .btn-brand:hover { background: #14213d; color: #fff; }
+      .card-stat { border: 0; border-radius: 1rem; box-shadow: 0 6px 20px rgba(29,53,87,.06); }
+      .step-pill { font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; }
+    </style>
+    {% block head_extra %}{% endblock %}
+    <style>
+      /* Portal Dark Theme & Glassmorphism (for Admin) */
+      body.portal-theme {
+        background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url("{{ url_for('static', filename='university.jpg') }}") no-repeat center center fixed;
+        background-size: cover;
+        color: #ffffff;
+      }
+      
+      /* User & Public Theme */
+      body.user-theme {
+        background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url("{{ url_for('static', filename='university.jpg') }}") no-repeat center center fixed;
+        background-size: cover;
+        color: #ffffff;
+      }
+      
+      /* Authenticated users get the sidebar layout */
+      body.sidebar-layout {
+        margin-left: 60px;
+        transition: margin-left 0.3s ease;
+      }
+      body.sidebar-layout .navbar { display: none !important; }
+      
+      @keyframes waveScroll {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 100% 50%; }
+      }
+      
+      /* Glass Cards */
+      .portal-theme .card, .portal-theme .card-stat,
+      .user-theme .card, .user-theme .card-stat {
+        background: rgba(255, 255, 255, 0.05) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #ffffff;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      }
+
+      .portal-theme .text-muted, .user-theme .text-muted { color: rgba(255, 255, 255, 0.7) !important; }
+      .portal-theme h1, .portal-theme h2, .portal-theme h3, .portal-theme h4, .portal-theme h5,
+      .user-theme h1, .user-theme h2, .user-theme h3, .user-theme h4, .user-theme h5 { color: #ffffff; }
+      
+      /* Glass Buttons */
+      .portal-theme .btn, .user-theme .btn {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        backdrop-filter: blur(5px);
+        transition: all 0.3s ease;
+      }
+      .portal-theme .btn:not(.btn-outline-success):not(.btn-outline-warning):not(.btn-outline-danger):not(.btn-outline-secondary), 
+      .user-theme .btn:not(.btn-outline-success):not(.btn-outline-warning):not(.btn-outline-danger):not(.btn-outline-secondary) {
+        color: #ffffff !important;
+      }
+      
+      .portal-theme .btn-outline-success, .user-theme .btn-outline-success { color: #28a745 !important; border-color: rgba(40,167,69,0.5) !important; }
+      .portal-theme .btn-outline-warning, .user-theme .btn-outline-warning { color: #ffc107 !important; border-color: rgba(255,193,7,0.5) !important; }
+      .portal-theme .btn-outline-danger, .user-theme .btn-outline-danger { color: #dc3545 !important; border-color: rgba(220,53,69,0.5) !important; }
+      .portal-theme .btn-outline-secondary, .user-theme .btn-outline-secondary { color: #adb5bd !important; border-color: rgba(173,181,189,0.5) !important; }
+
+      .portal-theme .btn:hover, .user-theme .btn:hover {
+        background: rgba(255, 255, 255, 0.2) !important;
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+      }
+
+      /* Fix Table styling */
+      .portal-theme table, .user-theme table { color: #fff; }
+      .portal-theme .table, .user-theme .table { --bs-table-bg: transparent; --bs-table-color: #fff; --bs-table-border-color: rgba(255,255,255,0.1); }
+      .portal-theme .table-striped>tbody>tr:nth-of-type(odd)>*, .user-theme .table-striped>tbody>tr:nth-of-type(odd)>* { --bs-table-bg-type: rgba(255,255,255,0.02); }
+      .portal-theme .table-hover>tbody>tr:hover>*, .user-theme .table-hover>tbody>tr:hover>* { --bs-table-bg-state: rgba(255,255,255,0.05); }
+
+      /* Form controls glass effect */
+      .portal-theme .form-control, .portal-theme .form-select,
+      .user-theme .form-control, .user-theme .form-select {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: #fff;
+      }
+      .portal-theme .form-control:focus, .portal-theme .form-select:focus,
+      .user-theme .form-control:focus, .user-theme .form-select:focus {
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        border-color: rgba(255,255,255,0.5);
+        box-shadow: 0 0 0 0.25rem rgba(255,255,255,0.1);
+      }
+      .portal-theme .form-control::placeholder, .user-theme .form-control::placeholder { color: rgba(255,255,255,0.5); }
+      .portal-theme .form-select option, .user-theme .form-select option { color: #000; }
+      
+      /* Glass Icons */
+      .portal-theme .bi:not(.btn .bi), .user-theme .bi:not(.btn .bi) {
+        background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.4));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+      }
+      
+      /* List Groups */
+      .portal-theme .list-group-item, .user-theme .list-group-item {
+        background: transparent !important;
+        color: #ffffff;
+        border-color: rgba(255,255,255,0.1);
+      }
+      
+      /* Sliding Sidebar Menu */
+      .admin-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 60px;
+        height: 100vh;
+        background: rgba(20, 20, 22, 0.6);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1050;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .admin-sidebar:hover { width: 250px; }
+      
+      .admin-sidebar .sidebar-logo {
+        display: flex;
+        align-items: center;
+        padding: 1.2rem;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #fff;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        white-space: nowrap;
+      }
+      .admin-sidebar .sidebar-logo i { font-size: 1.5rem; margin-right: 1.2rem; margin-left: 0.2rem; }
+      
+      .admin-sidebar .nav-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.2rem;
+        color: rgba(255,255,255,0.7);
+        text-decoration: none;
+        white-space: nowrap;
+        transition: all 0.2s;
+      }
+      .admin-sidebar .nav-item:hover {
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        border-left: 3px solid #fff;
+      }
+      .admin-sidebar .nav-item i { font-size: 1.3rem; margin-right: 1.2rem; margin-left: 0.2rem; width: 24px; text-align: center; }
+      .admin-sidebar .nav-text { opacity: 0; transition: opacity 0.2s; }
+      .admin-sidebar:hover .nav-text { opacity: 1; transition-delay: 0.1s; }
+      
+      .admin-sidebar .bottom-items { margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1); }
+    </style>
+  </head>
+  {% set is_admin = current_user.is_authenticated and current_user.is_admin %}
+  <body class="{% if is_admin %}portal-theme{% else %}user-theme{% endif %} {% if current_user.is_authenticated %}sidebar-layout{% endif %}">
+    {% if current_user.is_authenticated %}
+    <div class="admin-sidebar">
+      <a href="{{ url_for('admin.portal') if current_user.is_admin else url_for('user.portal') }}" class="sidebar-logo">
+        <i class="bi bi-shield-shaded"></i> <span class="nav-text">{{ 'Admin Portal' if current_user.is_admin else 'Student Portal' }}</span>
+      </a>
+      {% if current_user.is_admin %}
+      <a href="{{ url_for('admin.portal') }}" class="nav-item">
+        <i class="bi bi-grid-1x2-fill"></i> <span class="nav-text">DASHBOARD</span>
+      </a>
+      <a href="{{ url_for('admin.list_events') }}" class="nav-item">
+        <i class="bi bi-calendar-event-fill"></i> <span class="nav-text">EVENTS</span>
+      </a>
+      <a href="{{ url_for('admin.approvals') }}" class="nav-item">
+        <i class="bi bi-check-circle-fill"></i> <span class="nav-text">APPROVALS</span>
+      </a>
+      <a href="{{ url_for('analytics.dashboard') }}" class="nav-item">
+        <i class="bi bi-bar-chart-fill"></i> <span class="nav-text">ANALYTICS</span>
+      </a>
+      <a href="{{ url_for('results.index') }}" class="nav-item">
+        <i class="bi bi-trophy-fill"></i> <span class="nav-text">RESULTS</span>
+      </a>
+      <a href="{{ url_for('auth.profile') }}" class="nav-item">
+        <i class="bi bi-person-circle"></i> <span class="nav-text">PROFILE</span>
+      </a>
+      {% else %}
+      <a href="{{ url_for('user.portal') }}" class="nav-item">
+        <i class="bi bi-grid-1x2-fill"></i> <span class="nav-text">MY PORTAL</span>
+      </a>
+      <a href="{{ url_for('events.list_events') }}" class="nav-item">
+        <i class="bi bi-search"></i> <span class="nav-text">BROWSE EVENTS</span>
+      </a>
+      <a href="{{ url_for('user.my_events') }}" class="nav-item">
+        <i class="bi bi-calendar-check-fill"></i> <span class="nav-text">MY EVENTS</span>
+      </a>
+      <a href="{{ url_for('user.propose') }}" class="nav-item">
+        <i class="bi bi-plus-circle-fill"></i> <span class="nav-text">PROPOSE</span>
+      </a>
+      <a href="{{ url_for('auth.profile') }}" class="nav-item">
+        <i class="bi bi-person-circle"></i> <span class="nav-text">PROFILE</span>
+      </a>
+      {% endif %}
+      <div class="bottom-items">
+        <a href="{{ url_for('auth.logout') }}" class="nav-item">
+          <i class="bi bi-box-arrow-right"></i> <span class="nav-text">SIGN OUT</span>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+    <nav class="navbar navbar-expand-lg brand-bg shadow-sm">
+      <div class="container">
+        <a class="navbar-brand text-white" href="{{ base_path }}">
+          <i class="bi bi-mortarboard-fill me-1"></i> {{ site_name }}
+        </a>
+        <div class="ms-auto d-flex align-items-center gap-2 flex-wrap">
+          {% if current_user.is_authenticated %}
+            {% if current_user.is_admin %}
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('admin.portal') }}">Dashboard</a>
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('admin.list_events') }}">Events</a>
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('admin.approvals') }}">Approvals</a>
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('analytics.dashboard') }}">Analytics</a>
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('results.index') }}">Results</a>
+            {% else %}
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('user.portal') }}">My portal</a>
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('events.list_events') }}">Browse events</a>
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('user.my_events') }}">My events</a>
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('user.propose') }}">Propose</a>
+            {% endif %}
+            <span class="badge bg-light text-dark">{{ current_user.name }}</span>
+            <a class="btn btn-sm btn-outline-light" href="{{ url_for('auth.profile') }}">Profile</a>
+            <a class="btn btn-sm btn-outline-light" href="{{ url_for('auth.logout') }}">Sign out</a>
+          {% else %}
+            <a class="btn btn-sm btn-outline-light" href="{{ url_for('auth.login') }}">Sign in</a>
+          {% endif %}
+        </div>
+      </div>
+    </nav>
+
+    <main class="container py-4">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, msg in messages %}
+            <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show" role="alert">
+              {{ msg }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
