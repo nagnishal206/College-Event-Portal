@@ -52,12 +52,23 @@ def create_app() -> Flask:
         log.warning("SESSION_SECRET not set - using insecure dev fallback.")
     app.secret_key = secret
 
-    db_url = os.environ.get("DATABASE_URL")
+    # Prefer an explicit APP_DATABASE_URL (e.g. user-provided Neon URL) so we
+    # don't fight the platform-managed DATABASE_URL secret.
+    db_url = (
+        os.environ.get("APP_DATABASE_URL")
+        or os.environ.get("DATABASE_URL")
+    )
     if not db_url:
         raise RuntimeError(
-            "DATABASE_URL is not set. Provision a PostgreSQL database first."
+            "APP_DATABASE_URL / DATABASE_URL is not set. "
+            "Provision a PostgreSQL database first."
         )
-    app.config["SQLALCHEMY_DATABASE_URI"] = _normalize_db_url(db_url)
+    normalized_url = _normalize_db_url(db_url)
+    log.info(
+        "Using database host=%s",
+        urlparse(normalized_url).hostname,
+    )
+    app.config["SQLALCHEMY_DATABASE_URI"] = normalized_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
         "pool_pre_ping": True,
