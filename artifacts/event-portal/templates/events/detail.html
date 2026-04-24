@@ -27,7 +27,7 @@
 
       <hr />
 
-      <div class="row text-center">
+      <div class="row text-center mb-4">
         <div class="col">
           <div class="text-muted small">Registered</div>
           <div class="h4 fw-bold mb-0">{{ reg_count }}</div>
@@ -44,10 +44,31 @@
         </div>
       </div>
 
-      <div class="alert alert-info small mt-4 mb-0">
-        <i class="bi bi-info-circle me-1"></i>
-        1-click registration arrives in <strong>Step 5</strong>.
-      </div>
+      {% if current_user.is_admin %}
+        <div class="alert alert-info small mb-0">
+          <i class="bi bi-shield-lock me-1"></i>
+          Admins manage events; only students can register.
+          <a href="{{ url_for('admin.edit_event', event_id=event.id) }}" class="ms-2">Edit event</a>
+        </div>
+      {% elif my_reg %}
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="alert alert-success mb-0 flex-grow-1 me-2">
+            <i class="bi bi-check-circle me-1"></i>
+            You're registered. Registered on {{ my_reg.timestamp.strftime('%b %d, %Y at %H:%M') }}.
+          </div>
+          <form method="post" action="{{ url_for('events.cancel', event_id=event.id) }}">
+            <button class="btn btn-outline-danger" onclick="return confirm('Cancel your registration?')">
+              Cancel registration
+            </button>
+          </form>
+        </div>
+      {% else %}
+        <form method="post" action="{{ url_for('events.register', event_id=event.id) }}">
+          <button class="btn btn-brand btn-lg w-100 fw-semibold">
+            <i class="bi bi-person-check me-1"></i> Register for this event
+          </button>
+        </form>
+      {% endif %}
     </div>
   </div>
 </div>

@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% block title %}Analytics &middot; {{ site_name }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h3 mb-1">Analytics dashboard</h1>
+    <p class="text-muted mb-0">Live metrics computed by the Pandas pipeline.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('analytics.queries') }}" class="btn btn-outline-primary">
+      <i class="bi bi-database"></i> View SQL queries
+    </a>
+    <a href="{{ url_for('admin.portal') }}" class="btn btn-outline-secondary">Back to portal</a>
+  </div>
+</div>
+
+{# ---------- Top KPIs ---------- #}
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-6"><div class="card h-100 text-bg-primary"><div class="card-body">
+    <div class="text-uppercase small opacity-75">Users</div>
+    <div class="display-6 fw-bold">{{ m.totals.users }}</div>
+  </div></div></div>
+  <div class="col-md-3 col-6"><div class="card h-100 text-bg-success"><div class="card-body">
+    <div class="text-uppercase small opacity-75">Approved events</div>
+    <div class="display-6 fw-bold">{{ m.totals.approved_events }}</div>
+  </div></div></div>
+  <div class="col-md-3 col-6"><div class="card h-100 text-bg-info"><div class="card-body">
+    <div class="text-uppercase small opacity-75">Registrations</div>
+    <div class="display-6 fw-bold">{{ m.totals.registrations }}</div>
+  </div></div></div>
+  <div class="col-md-3 col-6"><div class="card h-100 text-bg-dark"><div class="card-body">
+    <div class="text-uppercase small opacity-75">Avg / event</div>
+    <div class="display-6 fw-bold">{{ m.totals.avg_regs_per_event }}</div>
+  </div></div></div>
+</div>
+
+{# ---------- Trend chart ---------- #}
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between">
+    <strong>Daily registrations &mdash; last 30 days</strong>
+    <span class="text-muted small">Pandas: registrations.groupby(day)</span>
+  </div>
+  <div class="card-body">
+    {% if trend %}
+      <canvas id="trendChart" height="90"></canvas>
+    {% else %}
+      <p class="text-muted mb-0">No registration data yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-4">
+  {# ---------- Popular events ---------- #}
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><strong>Most popular events</strong></div>
+      <div class="card-body p-0">
+        {% if popular %}
+        <table class="table table-striped mb-0">
+          <thead class="table-light">
+            <tr><th>Event</th><th>Category</th><th>Date</th><th class="text-end">Regs</th></tr>
+          </thead>
+          <tbody>
+            {% for r in popular %}
+              <tr>
+                <td>{{ r.name }}{% if r.is_competition %} <span class="badge text-bg-warning ms-1">comp</span>{% endif %}</td>
+                <td>{{ r.category }}</td>
+                <td>{{ r.date }}</td>
+                <td class="text-end fw-bold">{{ r.registrations }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<p class="p-3 text-muted mb-0">No events with registrations yet.</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# ---------- Category breakdown ---------- #}
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><strong>Category breakdown</strong></div>
+      <div class="card-body">
+        {% if cats %}
+          <canvas id="catChart" height="120"></canvas>
+          <table class="table table-sm mt-3">
+            <thead><tr><th>Category</th><th class="text-end">Events</th><th class="text-end">Regs</th></tr></thead>
+            <tbody>
+              {% for c in cats %}
+              <tr><td>{{ c.category }}</td><td class="text-end">{{ c.events_count }}</td><td class="text-end">{{ c.registrations }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}<p class="text-muted mb-0">No events yet.</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# ---------- Department engagement ---------- #}
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><strong>Department engagement</strong></div>
+      <div class="card-body p-0">
+        {% if depts %}
+        <table class="table table-striped mb-0">
+          <thead class="table-light">
+            <tr><th>Department</th><th class="text-end">Members</th><th class="text-end">Regs</th><th class="text-end">Unique events</th><th class="text-end">Rate</th></tr>
+          </thead>
+          <tbody>
+            {% for d in depts %}
+              <tr>
+                <td>{{ d.department }}</td>
+                <td class="text-end">{{ d.members }}</td>
+                <td class="text-end">{{ d.registrations }}</td>
+                <td class="text-end">{{ d.unique_events }}</td>
+                <td class="text-end">{{ d.engagement_rate or '—' }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<p class="p-3 text-muted mb-0">No users yet.</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# ---------- Top participants ---------- #}
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><strong>Top participants</strong></div>
+      <div class="card-body p-0">
+        {% if top_users %}
+        <table class="table table-striped mb-0">
+          <thead class="table-light">
+            <tr><th>Student</th><th>Department</th><th class="text-end">Regs</th></tr>
+          </thead>
+          <tbody>
+            {% for u in top_users %}
+              <tr>
+                <td>{{ u.name }}<div class="small text-muted">{{ u.email }}</div></td>
+                <td>{{ u.department }}</td>
+                <td class="text-end fw-bold">{{ u.registrations }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<p class="p-3 text-muted mb-0">No registrations yet.</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# ---------- Winners ---------- #}
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><strong>Recent competition winners</strong></div>
+      <div class="card-body p-0">
+        {% if winners %}
+        <table class="table table-striped mb-0">
+          <thead class="table-light">
+            <tr><th>Event</th><th>Winner</th><th>Dept</th><th class="text-center">Rank</th><th>Prize</th></tr>
+          </thead>
+          <tbody>
+            {% for w in winners %}
+              <tr>
+                <td>{{ w.event_name }}<div class="small text-muted">{{ w.date }}</div></td>
+                <td>{{ w.winner }}</td>
+                <td>{{ w.department }}</td>
+                <td class="text-center"><span class="badge bg-warning text-dark">#{{ w.rank }}</span></td>
+                <td>{{ w.prize or '—' }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<p class="p-3 text-muted mb-0">No results recorded yet. Use “Manage results” on a competition event.</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# ---------- Monthly budget ---------- #}
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><strong>Monthly approved-event budget</strong></div>
+      <div class="card-body p-0">
+        {% if monthly_budget %}
+        <table class="table table-striped mb-0">
+          <thead class="table-light"><tr><th>Month</th><th class="text-end">Events</th><th class="text-end">Total budget</th></tr></thead>
+          <tbody>
+            {% for m in monthly_budget %}
+              <tr><td>{{ m.month }}</td><td class="text-end">{{ m.events }}</td><td class="text-end">{{ '{:,.2f}'.format(m.total_budget) }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<p class="p-3 text-muted mb-0">No approved events yet.</p>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+  const trendData = {{ trend|tojson }};
+  if (trendData && trendData.length) {
+    new Chart(document.getElementById('trendChart'), {
+      type: 'line',
+      data: {
+        labels: trendData.map(p => p.day),
+        datasets: [{
+          label: 'Registrations',
+          data: trendData.map(p => p.registrations),
+          borderColor: '#0d6efd',
+          backgroundColor: 'rgba(13,110,253,.15)',
+          fill: true, tension: .3,
+        }]
+      },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+  }
+  const catData = {{ cats|tojson }};
+  if (catData && catData.length) {
+    new Chart(document.getElementById('catChart'), {
+      type: 'doughnut',
+      data: {
+        labels: catData.map(c => c.category),
+        datasets: [{
+          data: catData.map(c => c.registrations),
+          backgroundColor: ['#0d6efd','#198754','#dc3545','#ffc107','#6610f2','#20c997','#fd7e14','#6c757d']
+        }]
+      }
+    });
+  }
+})();
+</script>
+{% endblock %}

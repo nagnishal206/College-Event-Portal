@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}{{ event.name }} results &middot; {{ site_name }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+  <div>
+    <h1 class="h3 mb-1">{{ event.name }}</h1>
+    <div class="text-muted">{{ event.category }} &middot; {{ event.date }} &middot; {{ event.venue }}</div>
+  </div>
+  <a href="{{ url_for('results.index') }}" class="btn btn-outline-secondary">Back</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header"><strong>Registered participants</strong></div>
+      <div class="card-body p-0">
+        {% if rows %}
+        <table class="table mb-0">
+          <thead class="table-light">
+            <tr><th>Participant</th><th>Department</th><th class="text-center">Rank</th><th>Prize</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for reg, user, result in rows %}
+            <tr>
+              <td>{{ user.name }}<div class="small text-muted">{{ user.email }}</div></td>
+              <td>{{ user.department }}</td>
+              <td class="text-center">
+                {% if result %}<span class="badge bg-warning text-dark">#{{ result.rank }}</span>{% else %}—{% endif %}
+              </td>
+              <td>{{ result.prize if result and result.prize else '—' }}</td>
+              <td class="text-end">
+                {% if result %}
+                <form method="post" action="{{ url_for('results.delete', event_id=event.id, result_id=result.id) }}" class="d-inline">
+                  <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove this result?')">Clear</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+          <p class="p-3 text-muted mb-0">No participants registered yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header"><strong>Record / update a result</strong></div>
+      <div class="card-body">
+        {% if rows %}
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label">Participant</label>
+            <select name="registration_id" class="form-select" required>
+              <option value="">Select...</option>
+              {% for reg, user, _ in rows %}
+                <option value="{{ reg.id }}">{{ user.name }} ({{ user.department }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Rank</label>
+            <input type="number" name="rank" min="1" required class="form-control" placeholder="1 = winner">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Prize <span class="text-muted">(optional)</span></label>
+            <input type="text" name="prize" class="form-control" placeholder="e.g. Gold medal, ₹5,000">
+          </div>
+          <button class="btn btn-primary w-100">Save result</button>
+        </form>
+        {% else %}
+          <p class="text-muted mb-0">No participants to record results for.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

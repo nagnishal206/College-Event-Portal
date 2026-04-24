@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}My events &middot; {{ site_name }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">My events</h1>
+  <a href="{{ url_for('events.list_events') }}" class="btn btn-primary">Browse more</a>
+</div>
+
+{% if rows %}
+<div class="card">
+  <table class="table mb-0">
+    <thead class="table-light">
+      <tr><th>Event</th><th>Category</th><th>Date</th><th>Venue</th><th>Result</th><th class="text-end">Action</th></tr>
+    </thead>
+    <tbody>
+    {% for reg, event, result in rows %}
+      <tr>
+        <td><a href="{{ url_for('events.detail', event_id=event.id) }}" class="text-decoration-none">{{ event.name }}</a></td>
+        <td>{{ event.category }}</td>
+        <td>{{ event.date }}</td>
+        <td>{{ event.venue }}</td>
+        <td>
+          {% if result %}
+            <span class="badge bg-warning text-dark">Rank #{{ result.rank }}</span>
+            {% if result.prize %}<span class="small text-muted ms-1">{{ result.prize }}</span>{% endif %}
+          {% elif event.is_competition %}
+            <span class="text-muted small">Awaiting result</span>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td class="text-end">
+          <form method="post" action="{{ url_for('events.cancel', event_id=event.id) }}" class="d-inline">
+            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Cancel registration?')">Cancel</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  <div class="alert alert-info">You haven't registered for any events yet. <a href="{{ url_for('events.list_events') }}">Browse events</a> to find one.</div>
+{% endif %}
+{% endblock %}

@@ -84,10 +84,33 @@ def create_app() -> Flask:
     app.config["SESSION_COOKIE_SAMESITE"] = "None"
     app.config["SESSION_COOKIE_SECURE"] = True
     app.config["SESSION_COOKIE_HTTPONLY"] = True
+    app.config["REMEMBER_COOKIE_SAMESITE"] = "None"
+    app.config["REMEMBER_COOKIE_SECURE"] = True
+    app.config["REMEMBER_COOKIE_HTTPONLY"] = True
     # Tell Flask we're behind a TLS proxy so request.is_secure is correct.
     from werkzeug.middleware.proxy_fix import ProxyFix  # noqa: WPS433
 
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
+    # Modern browsers (Chrome 118+, Edge) block third-party cookies inside
+    # iframes by default. Adding the `Partitioned` attribute (CHIPS) lets
+    # the session cookie live in a per-top-level-site partition so it still
+    # works inside the Replit preview iframe.
+    @app.after_request
+    def _add_partitioned_cookie_attr(response):  # noqa: WPS430
+        cookies = response.headers.getlist("Set-Cookie")
+        if not cookies:
+            return response
+        new_cookies = []
+        for c in cookies:
+            if "Partitioned" not in c and "SameSite=None" in c and "Secure" in c:
+                c = c + "; Partitioned"
+            new_cookies.append(c)
+        # Replace all Set-Cookie headers with the patched versions.
+        response.headers.pop("Set-Cookie", None)
+        for c in new_cookies:
+            response.headers.add("Set-Cookie", c)
+        return response
 
     db.init_app(app)
     login_manager.init_app(app)
@@ -117,10 +140,16 @@ def create_app() -> Flask:
     from routes.auth import auth_bp  # noqa: WPS433
     from routes.admin import admin_bp  # noqa: WPS433
     from routes.user import user_bp  # noqa: WPS433
+    from routes.events import events_bp  # noqa: WPS433
+    from routes.analytics import analytics_bp  # noqa: WPS433
+    from routes.results import results_bp  # noqa: WPS433
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(user_bp)
+    app.register_blueprint(events_bp)
+    app.register_blueprint(analytics_bp)
+    app.register_blueprint(results_bp)
 
     # ------------------------------------------------------------------
     # Top-level routes

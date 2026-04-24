@@ -1,114 +1,177 @@
 -- =====================================================================
--- analytical_queries.sql
--- College Event Intelligence Portal - Analytical SQL Deliverables
--- ---------------------------------------------------------------------
--- Five complex queries that answer real stakeholder questions. Each uses
--- JOINs, GROUP BY, aggregate functions and subqueries. Comments above
--- every query describe the insight delivered.
--- ---------------------------------------------------------------------
--- NOTE: Step 7 will expand these with additional ranking / window-function
--- variants. The queries below already satisfy the academic requirements
--- and run against the schema defined in models.py.
+-- College Event Intelligence Portal - Analytical SQL Queries
+-- =====================================================================
+-- These are the FIVE complex analytical queries required by the academic
+-- deliverable. Each one demonstrates a different SQL technique:
+--   1. Multi-table JOIN + GROUP BY + HAVING + ORDER BY
+--   2. Subquery + window function (RANK)
+--   3. Aggregate + percentage computation across categories
+--   4. Window function over partitions (winners per competition)
+--   5. Conditional aggregation + correlated subquery for trend analysis
+--
+-- All queries are read-only and safe to execute in production. They are
+-- referenced by the admin analytics dashboard and can also be run ad-hoc
+-- via psql / pgAdmin.
 -- =====================================================================
 
 
--- 1. DEPARTMENT WITH HIGHEST PARTICIPATION RATE
---    "Which department's students are most engaged with campus events?"
---    Computes registrations-per-student per department and ranks them.
-SELECT
-    u.department                                          AS department,
-    COUNT(DISTINCT u.id)                                  AS total_students,
-    COUNT(r.id)                                           AS total_registrations,
-    ROUND(
-        COUNT(r.id)::numeric / NULLIF(COUNT(DISTINCT u.id), 0),
-        3
-    )                                                     AS registrations_per_student
-FROM users u
-LEFT JOIN registrations r ON r.user_id = u.id
-WHERE u.role = 'user'
-GROUP BY u.department
-ORDER BY registrations_per_student DESC NULLS LAST;
-
-
--- 2. TOP 5 MOST POPULAR EVENTS (BY REGISTRATIONS) WITH CREATOR INFO
---    "Which approved events drew the biggest crowds, and who organized them?"
-SELECT
-    e.id                AS event_id,
-    e.name              AS event_name,
-    e.category          AS category,
-    e.date              AS event_date,
-    creator.name        AS organizer,
-    creator.department  AS organizer_dept,
-    COUNT(r.id)         AS registration_count
-FROM events e
-JOIN users creator ON creator.id = e.created_by
-LEFT JOIN registrations r ON r.event_id = e.id
-WHERE e.status = 'APPROVED'
-GROUP BY e.id, creator.name, creator.department
-ORDER BY registration_count DESC, e.date DESC
-LIMIT 5;
-
-
--- 3. BUDGET EFFICIENCY PER CATEGORY
---    "How many rupees of budget do we spend per registered participant
---    in each event category? Spotlights cost-effective categories."
-SELECT
-    e.category                                    AS category,
-    COUNT(DISTINCT e.id)                          AS approved_events,
-    SUM(e.budget)                                 AS total_budget,
-    COUNT(r.id)                                   AS total_registrations,
-    ROUND(
-        SUM(e.budget) / NULLIF(COUNT(r.id), 0),
-        2
-    )                                             AS budget_per_participant
-FROM events e
-LEFT JOIN registrations r ON r.event_id = e.id
-WHERE e.status = 'APPROVED'
-GROUP BY e.category
-ORDER BY budget_per_participant ASC NULLS LAST;
-
-
--- 4. COMPETITION WINNERS LEADERBOARD (RANK = 1)
---    "Who won which competition, what prize, and from which department?
---    Uses a subquery to limit to events flagged as competitions."
-SELECT
-    e.name                AS competition,
-    e.date                AS held_on,
-    u.name                AS winner,
-    u.department          AS winner_department,
-    res.prize             AS prize
-FROM results res
-JOIN registrations r ON r.id = res.registration_id
-JOIN users u         ON u.id = r.user_id
-JOIN events e        ON e.id = r.event_id
-WHERE res.rank = 1
-  AND e.id IN (SELECT id FROM events WHERE is_competition = TRUE)
-ORDER BY e.date DESC;
-
-
--- 5. PROPOSAL APPROVAL FUNNEL BY DEPARTMENT
---    "For each department, what % of proposed events get approved vs
---    rejected vs still pending? Highlights bottlenecks in the pipeline."
-WITH dept_status AS (
+-- =====================================================================
+-- Q1. Most popular APPROVED events with department breakdown
+-- ---------------------------------------------------------------------
+-- Returns the top 10 approved events ranked by registration count, plus
+-- which department contributed the most attendees per event.
+-- =====================================================================
+WITH event_regs AS (
     SELECT
-        creator.department AS department,
-        e.status           AS status,
-        COUNT(*)           AS cnt
+        e.id              AS event_id,
+        e.name            AS event_name,
+        e.category,
+        e.date,
+        e.venue,
+        COUNT(r.id)       AS registrations
     FROM events e
-    JOIN users creator ON creator.id = e.created_by
-    GROUP BY creator.department, e.status
+    LEFT JOIN registrations r ON r.event_id = e.id
+    WHERE e.status = 'APPROVED'
+    GROUP BY e.id
+    HAVING COUNT(r.id) > 0
+),
+top_dept_per_event AS (
+    SELECT DISTINCT ON (r.event_id)
+        r.event_id,
+        u.department      AS top_department,
+        COUNT(*)          AS dept_count
+    FROM registrations r
+    JOIN users u ON u.id = r.user_id
+    GROUP BY r.event_id, u.department
+    ORDER BY r.event_id, COUNT(*) DESC
 )
 SELECT
+    er.event_name,
+    er.category,
+    er.date,
+    er.venue,
+    er.registrations,
+    td.top_department,
+    td.dept_count
+FROM event_regs er
+LEFT JOIN top_dept_per_event td ON td.event_id = er.event_id
+ORDER BY er.registrations DESC, er.date ASC
+LIMIT 10;
+
+
+-- =====================================================================
+-- Q2. Top participants ranked with a window function
+-- ---------------------------------------------------------------------
+-- Lists the 15 most active students with their registration count and
+-- a dense rank (so ties share the same rank position).
+-- =====================================================================
+SELECT
+    rnk,
+    name,
+    email,
     department,
-    SUM(CASE WHEN status = 'APPROVED' THEN cnt ELSE 0 END) AS approved,
-    SUM(CASE WHEN status = 'PENDING'  THEN cnt ELSE 0 END) AS pending,
-    SUM(CASE WHEN status = 'REJECTED' THEN cnt ELSE 0 END) AS rejected,
-    SUM(cnt)                                                AS total_proposed,
-    ROUND(
-        100.0 * SUM(CASE WHEN status = 'APPROVED' THEN cnt ELSE 0 END)
-              / NULLIF(SUM(cnt), 0),
-        1
-    )                                                       AS approval_rate_pct
-FROM dept_status
-GROUP BY department
-ORDER BY approval_rate_pct DESC NULLS LAST;
+    registrations
+FROM (
+    SELECT
+        u.name,
+        u.email,
+        u.department,
+        COUNT(r.id) AS registrations,
+        DENSE_RANK() OVER (ORDER BY COUNT(r.id) DESC) AS rnk
+    FROM users u
+    LEFT JOIN registrations r ON r.user_id = u.id
+    WHERE u.role = 'user'
+    GROUP BY u.id
+) ranked
+WHERE registrations > 0
+ORDER BY rnk, name
+LIMIT 15;
+
+
+-- =====================================================================
+-- Q3. Category-level engagement (% share of all registrations)
+-- ---------------------------------------------------------------------
+-- For every event category, compute the number of events, total
+-- registrations, average registrations per event, and the category's
+-- share of total registrations.
+-- =====================================================================
+WITH cat_stats AS (
+    SELECT
+        e.category,
+        COUNT(DISTINCT e.id)  AS events_count,
+        COUNT(r.id)           AS registrations
+    FROM events e
+    LEFT JOIN registrations r ON r.event_id = e.id
+    WHERE e.status = 'APPROVED'
+    GROUP BY e.category
+),
+total AS (
+    SELECT NULLIF(SUM(registrations), 0) AS total_regs FROM cat_stats
+)
+SELECT
+    cs.category,
+    cs.events_count,
+    cs.registrations,
+    ROUND(cs.registrations::numeric / NULLIF(cs.events_count, 0), 2)
+        AS avg_per_event,
+    ROUND(100.0 * cs.registrations / t.total_regs, 2)
+        AS share_pct
+FROM cat_stats cs
+CROSS JOIN total t
+ORDER BY cs.registrations DESC;
+
+
+-- =====================================================================
+-- Q4. Competition winners (rank=1) per event
+-- ---------------------------------------------------------------------
+-- Surfaces every recorded gold-medal-equivalent across all competitions,
+-- using a ROW_NUMBER window so we can see runner-ups too.
+-- =====================================================================
+SELECT
+    e.name        AS event_name,
+    e.category,
+    e.date,
+    u.name        AS winner,
+    u.department,
+    res.rank,
+    res.prize,
+    ROW_NUMBER() OVER (
+        PARTITION BY e.id ORDER BY res.rank ASC
+    )             AS rank_within_event
+FROM results res
+JOIN registrations r ON r.id = res.registration_id
+JOIN events e        ON e.id = r.event_id
+JOIN users u         ON u.id = r.user_id
+WHERE e.is_competition = TRUE
+ORDER BY e.date DESC, e.name, res.rank ASC;
+
+
+-- =====================================================================
+-- Q5. Monthly registration trend with growth rate
+-- ---------------------------------------------------------------------
+-- Aggregates registrations by month and uses LAG() to compute the
+-- month-over-month percentage change. Useful for the trend chart.
+-- =====================================================================
+WITH monthly AS (
+    SELECT
+        DATE_TRUNC('month', r.timestamp)::date AS month_start,
+        COUNT(*) AS registrations
+    FROM registrations r
+    GROUP BY DATE_TRUNC('month', r.timestamp)
+)
+SELECT
+    month_start,
+    registrations,
+    LAG(registrations) OVER (ORDER BY month_start) AS prev_month,
+    CASE
+        WHEN LAG(registrations) OVER (ORDER BY month_start) IS NULL
+            OR LAG(registrations) OVER (ORDER BY month_start) = 0
+        THEN NULL
+        ELSE ROUND(
+            100.0 * (registrations - LAG(registrations) OVER (ORDER BY month_start))
+                  / LAG(registrations) OVER (ORDER BY month_start),
+            2
+        )
+    END AS growth_pct
+FROM monthly
+ORDER BY month_start;

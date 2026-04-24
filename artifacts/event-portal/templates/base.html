@@ -38,22 +38,16 @@
         <div class="ms-auto d-flex align-items-center gap-2 flex-wrap">
           {% if current_user.is_authenticated %}
             {% if current_user.is_admin %}
-              <a class="btn btn-sm btn-outline-light" href="{{ url_for('admin.portal') }}">
-                Dashboard
-              </a>
-              <a class="btn btn-sm btn-outline-light" href="{{ url_for('admin.list_events') }}">
-                Events
-              </a>
-              <a class="btn btn-sm btn-outline-light" href="{{ url_for('admin.approvals') }}">
-                Approvals
-              </a>
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('admin.portal') }}">Dashboard</a>
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('admin.list_events') }}">Events</a>
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('admin.approvals') }}">Approvals</a>
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('analytics.dashboard') }}">Analytics</a>
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('results.index') }}">Results</a>
             {% else %}
-              <a class="btn btn-sm btn-outline-light" href="{{ url_for('user.portal') }}">
-                My portal
-              </a>
-              <a class="btn btn-sm btn-outline-light" href="{{ url_for('events.list_events') }}">
-                Browse events
-              </a>
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('user.portal') }}">My portal</a>
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('events.list_events') }}">Browse events</a>
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('user.my_events') }}">My events</a>
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('user.propose') }}">Propose</a>
             {% endif %}
             <span class="badge bg-light text-dark">{{ current_user.name }}</span>
             <a class="btn btn-sm btn-outline-light" href="{{ url_for('auth.logout') }}">Sign out</a>

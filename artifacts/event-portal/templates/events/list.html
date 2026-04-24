@@ -5,7 +5,7 @@
   <span class="step-pill text-brand fw-semibold">Browse events</span>
   <h1 class="h3 fw-bold mt-1 mb-0">What's happening on campus</h1>
   <p class="text-muted small mb-0">
-    Approved events only. Registration opens up in Step 5.
+    Approved events only. Click any card to register in one step.
   </p>
 </div>
 
@@ -57,8 +57,13 @@
             <p class="small mb-2">
               {{ (ev.description or '')[:120] }}{% if ev.description and ev.description|length > 120 %}…{% endif %}
             </p>
-            <div class="text-muted small mt-auto">
-              <i class="bi bi-people"></i> {{ row.reg_count }} registered
+            <div class="d-flex justify-content-between align-items-center mt-auto">
+              <span class="text-muted small">
+                <i class="bi bi-people"></i> {{ row.reg_count }} registered
+              </span>
+              {% if row.is_registered %}
+                <span class="badge bg-success">Registered</span>
+              {% endif %}
             </div>
           </div>
         </a>

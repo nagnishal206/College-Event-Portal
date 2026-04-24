@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Results &middot; {{ site_name }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">Competition results</h1>
+  <a href="{{ url_for('admin.portal') }}" class="btn btn-outline-secondary">Back</a>
+</div>
+
+{% if competitions %}
+<div class="card">
+  <table class="table mb-0">
+    <thead class="table-light">
+      <tr><th>Event</th><th>Category</th><th>Date</th><th>Venue</th><th class="text-end">Action</th></tr>
+    </thead>
+    <tbody>
+    {% for e in competitions %}
+      <tr>
+        <td>{{ e.name }}</td>
+        <td>{{ e.category }}</td>
+        <td>{{ e.date }}</td>
+        <td>{{ e.venue }}</td>
+        <td class="text-end">
+          <a href="{{ url_for('results.manage', event_id=e.id) }}" class="btn btn-sm btn-primary">Manage results</a>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  <div class="alert alert-info">No approved competition events yet. Mark an event as a competition when creating it.</div>
+{% endif %}
+{% endblock %}

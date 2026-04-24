@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}SQL queries &middot; {{ site_name }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h3 mb-1">Analytical SQL queries</h1>
+    <p class="text-muted mb-0">Five required queries from <code>analytical_queries.sql</code>, executed live.</p>
+  </div>
+  <a href="{{ url_for('analytics.dashboard') }}" class="btn btn-outline-secondary">Back to dashboard</a>
+</div>
+
+{% for q in results %}
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <strong>Q{{ q.num }}. {{ q.title }}</strong>
+    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#sql-{{ q.num }}">
+      Show SQL
+    </button>
+  </div>
+  <div class="collapse" id="sql-{{ q.num }}">
+    <pre class="bg-dark text-light p-3 mb-0" style="font-size:.85rem; overflow-x:auto;"><code>{{ q.sql }}</code></pre>
+  </div>
+  <div class="card-body p-0">
+    {% if q.error %}
+      <div class="alert alert-danger m-3 mb-0">Query failed: {{ q.error }}</div>
+    {% elif q.rows %}
+      <div class="table-responsive">
+        <table class="table table-sm table-striped mb-0">
+          <thead class="table-light">
+            <tr>{% for c in q.cols %}<th>{{ c }}</th>{% endfor %}</tr>
+          </thead>
+          <tbody>
+            {% for row in q.rows %}
+              <tr>{% for c in q.cols %}<td>{{ row[c] if row[c] is not none else '—' }}</td>{% endfor %}</tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="p-3 text-muted mb-0">Query returned 0 rows. Add some data and re-run.</p>
+    {% endif %}
+  </div>
+</div>
+{% endfor %}
+{% endblock %}
