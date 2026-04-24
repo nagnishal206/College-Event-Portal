@@ -91,11 +91,24 @@ def create_app() -> Flask:
         }
 
     # ------------------------------------------------------------------
-    # Step 1 placeholder routes. These will be replaced in step 2 (auth)
-    # and step 4/5 (portals). For now they let us verify the app boots.
+    # Blueprints
+    # ------------------------------------------------------------------
+    from routes.auth import auth_bp  # noqa: WPS433
+    from routes.admin import admin_bp  # noqa: WPS433
+    from routes.user import user_bp  # noqa: WPS433
+
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(admin_bp)
+    app.register_blueprint(user_bp)
+
+    # ------------------------------------------------------------------
+    # Top-level routes
     # ------------------------------------------------------------------
     @app.route("/")
     def landing():
+        if current_user.is_authenticated:
+            target = "admin.portal" if current_user.is_admin else "user.portal"
+            return redirect(url_for(target))
         return render_template("landing.html")
 
     @app.route("/healthz")
@@ -106,11 +119,6 @@ def create_app() -> Flask:
         except Exception as exc:  # pragma: no cover - diagnostic
             log.exception("DB healthcheck failed")
             return {"status": "degraded", "db": str(exc)}, 500
-
-    @app.route("/login")
-    def login_placeholder():
-        # Step 2 will mount the real auth blueprint at /login.
-        return redirect(url_for("landing"))
 
     # Bootstrap tables on first run. In production we'd use Alembic; for an
     # academic project create_all is acceptable and matches the spec.

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Your portal &middot; {{ site_name }}{% endblock %}
+{% block content %}
+<div class="row align-items-center mb-4">
+  <div class="col">
+    <span class="step-pill text-brand fw-semibold">Student portal</span>
+    <h1 class="h3 fw-bold mt-1 mb-0">
+      Hi {{ current_user.name.split(' ')[0] }} 👋
+    </h1>
+    <p class="text-muted small mb-0">
+      {{ current_user.department }} &middot; {{ current_user.email }}
+    </p>
+  </div>
+</div>
+
+<div class="card card-stat p-4">
+  <h5 class="fw-semibold text-brand">Step 2 complete</h5>
+  <p class="text-muted small mb-3">
+    Your account is verified. Event discovery, 1-click registration and
+    "propose an event" land in <strong>Step 5</strong>.
+  </p>
+  <ul class="small mb-0">
+    <li>Verified via the 6-digit code sent to your inbox</li>
+    <li>Logged in with a remember-me session</li>
+  </ul>
+</div>
+{% endblock %}
