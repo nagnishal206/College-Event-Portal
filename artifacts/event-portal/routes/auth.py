@@ -198,7 +198,9 @@ def register():
             "finish creating your account.",
             "info",
         )
-        return redirect(url_for("auth.verify_otp"))
+        # Pass the email as a query param too, in case the session cookie is
+        # blocked (e.g. inside a cross-origin preview iframe).
+        return redirect(url_for("auth.verify_otp", email=form["email"]))
 
     return render_template("auth/register.html", form=form, departments=DEPARTMENTS)
 

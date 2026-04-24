@@ -79,6 +79,16 @@ def create_app() -> Flask:
     app.config["APPLICATION_ROOT"] = base_path
     app.config["BASE_PATH"] = base_path
 
+    # Session cookie must be SameSite=None + Secure so the browser keeps
+    # sending it inside the Replit cross-origin preview iframe.
+    app.config["SESSION_COOKIE_SAMESITE"] = "None"
+    app.config["SESSION_COOKIE_SECURE"] = True
+    app.config["SESSION_COOKIE_HTTPONLY"] = True
+    # Tell Flask we're behind a TLS proxy so request.is_secure is correct.
+    from werkzeug.middleware.proxy_fix import ProxyFix  # noqa: WPS433
+
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
     db.init_app(app)
     login_manager.init_app(app)
 
