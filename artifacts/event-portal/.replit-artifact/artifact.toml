@@ -15,16 +15,11 @@ paths = [ "/" ]
 localPort = 21436
 
 [services.development]
-run = "pnpm --filter @workspace/event-portal run dev"
+run = "python app.py"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/event-portal", "run", "build" ]
-publicDir = "artifacts/event-portal/dist/public"
-serve = "static"
-
-[[services.production.rewrites]]
-from = "/*"
-to = "/index.html"
+build = [ "echo", "no build step" ]
+run = "gunicorn -b 0.0.0.0:21436 -w 2 app:app"
 
 [services.env]
 PORT = "21436"

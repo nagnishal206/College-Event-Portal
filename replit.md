@@ -1,27 +1,75 @@
-# Workspace
+# College Event Intelligence Portal
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+A Flask-based web portal for managing college events, built to satisfy strict
+academic requirements (Pandas data processing pipeline + complex analytical
+SQL queries). The user/admin portal lives at `artifacts/event-portal/`.
 
 ## Stack
 
-- **Monorepo tool**: pnpm workspaces
-- **Node.js version**: 24
-- **Package manager**: pnpm
-- **TypeScript version**: 5.9
-- **API framework**: Express 5
-- **Database**: PostgreSQL + Drizzle ORM
-- **Validation**: Zod (`zod/v4`), `drizzle-zod`
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
+- **Backend**: Python 3.11 + Flask 3
+- **Database**: PostgreSQL (Replit-provisioned, accessed via `DATABASE_URL`)
+- **ORM**: SQLAlchemy 2 + Flask-SQLAlchemy
+- **Auth**: Flask-Login + Werkzeug password hashing (Gmail OTP coming in step 2)
+- **Data pipeline**: Pandas + SQLAlchemy (`analytics_pipeline.py`)
+- **Frontend**: Jinja2 templates + Bootstrap 5 (CDN)
+- **Production server**: Gunicorn
 
-## Key Commands
+## Project structure
 
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- `pnpm --filter @workspace/api-server run dev` — run API server locally
+```
+artifacts/event-portal/
+├── app.py                    Flask app factory + entrypoint
+├── extensions.py             Shared db / login_manager singletons
+├── models.py                 SQLAlchemy models (3NF schema)
+├── analytics_pipeline.py     Pandas pipeline (academic deliverable)
+├── analytical_queries.sql    5 stakeholder SQL queries (academic deliverable)
+├── routes/                   Flask blueprints (filled in steps 2-5)
+├── templates/                Jinja2 templates
+└── static/                   CSS / images
+```
 
-See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+## Database schema (Step 1 - DONE)
+
+Normalized to 3NF:
+
+| Table          | Purpose                                              |
+| -------------- | ---------------------------------------------------- |
+| `users`        | id, name, email, password_hash, role, department     |
+| `events`       | id, name, category, date, venue, description, budget, status, created_by, is_competition |
+| `registrations`| id, event_id, user_id, timestamp                     |
+| `results`      | id, registration_id, rank, prize                     |
+| `pending_otps` | Step 2 OTP staging table                             |
+
+`status` is constrained to `PENDING / APPROVED / REJECTED`. `role` is
+constrained to `admin / user`. Foreign keys cascade on delete.
+
+## Build plan (per the user's spec)
+
+1. **Database setup & flexible schema** — DONE
+2. Authentication & OTP flow (Gmail SMTP)
+3. Event approval pipeline (token system)
+4. Admin portal (analytics dashboard, approvals, results)
+5. User portal (discovery, 1-click register, propose event)
+6. Pandas data processing pipeline (`analytics_pipeline.py` full version)
+7. Analytical SQL deliverables (`analytical_queries.sql` expanded)
+
+The user wants explicit confirmation between each step.
+
+## Running locally
+
+The artifact is wired to run via the workspace's preview proxy:
+
+- Dev: `python app.py` (PORT and BASE_PATH are injected by the artifact runner)
+- Prod: `gunicorn -b 0.0.0.0:$PORT -w 2 app:app`
+- Health check: `GET /healthz`
+
+## Required environment / secrets
+
+| Name                  | Purpose                              | Status                |
+| --------------------- | ------------------------------------ | --------------------- |
+| `DATABASE_URL`        | PostgreSQL connection                | provisioned           |
+| `SESSION_SECRET`      | Flask session signing                | already in workspace  |
+| `GMAIL_USER`          | Sender email for OTP (Step 2)        | will request in Step 2|
+| `GMAIL_APP_PASSWORD`  | Gmail App Password (Step 2)          | will request in Step 2|
