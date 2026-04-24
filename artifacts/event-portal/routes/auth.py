@@ -179,12 +179,9 @@ def register():
 
         try:
             send_otp_email(form["email"], form["name"], otp_code)
-        except EmailNotConfigured:
-            log.error("Gmail credentials missing - cannot send OTP")
-            flash(
-                "Email service is not configured. Please contact the administrator.",
-                "danger",
-            )
+        except EmailNotConfigured as exc:
+            log.error("Gmail not configured: %s", exc)
+            flash(f"Email service problem: {exc}", "danger")
             return render_template(
                 "auth/register.html", form=form, departments=DEPARTMENTS
             ), 500
