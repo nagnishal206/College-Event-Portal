@@ -1,0 +1,43 @@
+Act as an expert Full-Stack Python Web Developer and Data Engineer. Your task is to build a "College Event Intelligence Portal" using Flask (Python), PostgreSQL (NeonDB), and HTML/Bootstrap. 
+
+This project must satisfy strict academic requirements, including a dedicated Pandas data processing pipeline and complex analytical SQL queries.
+
+### 1. Database Setup & Flexible Schema
+Connect to an external PostgreSQL database (NeonDB) using the `DATABASE_URL` environment variable. 
+Design a normalized (3NF) schema with the following core tables:
+- **Users:** `id`, `name`, `email`, `password_hash`, `role` (admin/user), `department`.
+- **Events:** `id`, `name`, `category`, `date`, `venue`, `description`, `budget`, `status` (PENDING, APPROVED, REJECTED), `created_by` (FK to Users), `is_competition` (Boolean).
+- **Registrations:** `id`, `event_id`, `user_id`, `timestamp`.
+- **Results:** `id`, `registration_id`, `rank`, `prize`. (Only populated if the event `is_competition` is TRUE).
+
+### 2. Authentication & OTP Flow
+- **Single Login Page:** Users and Admins log in at `/login`. Redirect Admins to `/admin/portal` and Users to `/user/portal` based on their role.
+- **Registration & OTP:** When registering, generate a 6-digit OTP. Send it via email using `smtplib` (authenticating via `GMAIL_USER` and `GMAIL_APP_PASSWORD` environment variables). Only save the user to the database after OTP verification.
+
+### 3. Event Approval Pipeline (Token System)
+- Admins creating events set status to `APPROVED` automatically.
+- Users proposing events set status to `PENDING`. 
+- The frontend form must handle flexible events: Ask the user if it is a "Competition" or "Workshop". If Competition, reveal fields for potential prizes.
+
+### 4. Admin Portal Features
+- **Analytics Dashboard:** Visualizations showing department-wise event count, participation volume, and budget distribution. 
+- **Event Approval:** A table listing all `PENDING` events with "Approve/Reject" buttons.
+- **Event & Results Management:** Add/edit events and input competition winners.
+
+### 5. User Portal Features
+- **Dashboard & Discovery:** Show user stats, "Upcoming Events", and "Expired Events".
+- **Registration:** 1-click registration for upcoming events.
+- **Propose Event:** A form to submit an event idea (enters the pending pipeline).
+
+### 6. Data Processing Pipeline (Crucial Academic Requirement)
+Create a standalone file named `analytics_pipeline.py`. 
+Using the `pandas` library and SQLAlchemy, write a script that connects to the database and performs data cleaning and aggregation:
+- Handle missing values (e.g., fill null prizes with 'N/A').
+- Standardize categorical text (ensure department names are uniformly formatted).
+- Compute derived metrics (e.g., participation rate per department, event frequency by month) and save these summaries to a new aggregated table or return them as JSON for the dashboard.
+
+### 7. Analytical SQL Deliverables
+Create a file named `analytical_queries.sql`.
+Write 5 complex, meaningful SQL queries answering stakeholder questions. Use `JOIN`, `GROUP BY`, aggregate functions, and subqueries. Include comments explaining what insight each query provides (e.g., "Find the department with the highest external participation rate").
+
+Please generate the foundational Flask `app.py`, the `analytics_pipeline.py`, the `analytical_queries.sql`, and the file structure required to start this project.
