@@ -35,12 +35,30 @@
         <a class="navbar-brand text-white" href="{{ base_path }}">
           <i class="bi bi-mortarboard-fill me-1"></i> {{ site_name }}
         </a>
-        <div class="ms-auto d-flex align-items-center gap-2">
+        <div class="ms-auto d-flex align-items-center gap-2 flex-wrap">
           {% if current_user.is_authenticated %}
+            {% if current_user.is_admin %}
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('admin.portal') }}">
+                Dashboard
+              </a>
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('admin.list_events') }}">
+                Events
+              </a>
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('admin.approvals') }}">
+                Approvals
+              </a>
+            {% else %}
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('user.portal') }}">
+                My portal
+              </a>
+              <a class="btn btn-sm btn-outline-light" href="{{ url_for('events.list_events') }}">
+                Browse events
+              </a>
+            {% endif %}
             <span class="badge bg-light text-dark">{{ current_user.name }}</span>
-            <a class="btn btn-sm btn-outline-light" href="{{ base_path }}logout">Sign out</a>
+            <a class="btn btn-sm btn-outline-light" href="{{ url_for('auth.logout') }}">Sign out</a>
           {% else %}
-            <a class="btn btn-sm btn-outline-light" href="{{ base_path }}login">Sign in</a>
+            <a class="btn btn-sm btn-outline-light" href="{{ url_for('auth.login') }}">Sign in</a>
           {% endif %}
         </div>
       </div>

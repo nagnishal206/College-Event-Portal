@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Your portal &middot; {{ site_name }}{% endblock %}
 {% block content %}
-<div class="row align-items-center mb-4">
-  <div class="col">
+<div class="d-flex flex-wrap justify-content-between align-items-end mb-4">
+  <div>
     <span class="step-pill text-brand fw-semibold">Student portal</span>
     <h1 class="h3 fw-bold mt-1 mb-0">
       Hi {{ current_user.name.split(' ')[0] }} 👋
@@ -11,17 +11,48 @@
       {{ current_user.department }} &middot; {{ current_user.email }}
     </p>
   </div>
+  <a href="{{ url_for('events.list_events') }}" class="btn btn-brand fw-semibold mt-3">
+    Browse events
+  </a>
 </div>
 
-<div class="card card-stat p-4">
-  <h5 class="fw-semibold text-brand">Step 2 complete</h5>
-  <p class="text-muted small mb-3">
-    Your account is verified. Event discovery, 1-click registration and
-    "propose an event" land in <strong>Step 5</strong>.
-  </p>
-  <ul class="small mb-0">
-    <li>Verified via the 6-digit code sent to your inbox</li>
-    <li>Logged in with a remember-me session</li>
-  </ul>
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card card-stat p-3">
+      <div class="text-muted small">Upcoming approved events</div>
+      <div class="h3 fw-bold mb-0">{{ upcoming_count }}</div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card card-stat p-3">
+      <div class="text-muted small">Your registrations</div>
+      <div class="h3 fw-bold mb-0">{{ my_regs }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card card-stat p-3">
+  <h5 class="fw-semibold mb-3">Coming up next</h5>
+  {% if next_events %}
+    <ul class="list-group list-group-flush small">
+      {% for ev in next_events %}
+        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+          <div>
+            <div class="fw-semibold">{{ ev.name }}</div>
+            <div class="text-muted">
+              {{ ev.category }} &middot; {{ ev.date.strftime('%b %d, %Y') }}
+              &middot; {{ ev.venue }}
+            </div>
+          </div>
+          <a href="{{ url_for('events.detail', event_id=ev.id) }}"
+             class="btn btn-sm btn-outline-secondary">View</a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted small mb-0">
+      No approved events scheduled yet — check back soon.
+    </p>
+  {% endif %}
 </div>
 {% endblock %}

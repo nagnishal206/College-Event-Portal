@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}All events &middot; {{ site_name }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-end justify-content-between mb-3">
+  <div>
+    <span class="step-pill text-brand fw-semibold">Event management</span>
+    <h1 class="h3 fw-bold mt-1 mb-0">All events</h1>
+  </div>
+  <a href="{{ url_for('admin.create_event') }}" class="btn btn-brand fw-semibold mt-3">
+    <i class="bi bi-plus-circle me-1"></i> New event
+  </a>
+</div>
+
+<div class="d-flex gap-2 mb-3 flex-wrap">
+  <a href="{{ url_for('admin.list_events') }}"
+     class="btn btn-sm {{ 'btn-brand' if not active_status else 'btn-outline-secondary' }}">
+    All
+  </a>
+  {% for s in statuses %}
+    <a href="{{ url_for('admin.list_events', status=s) }}"
+       class="btn btn-sm {{ 'btn-brand' if active_status == s else 'btn-outline-secondary' }}">
+      {{ s.title() }}
+    </a>
+  {% endfor %}
+</div>
+
+<div class="card card-stat p-0 overflow-hidden">
+  {% if rows %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Event</th>
+            <th>Category</th>
+            <th>Date</th>
+            <th>Venue</th>
+            <th class="text-center">Regs</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ev, reg_count in rows %}
+            <tr>
+              <td>
+                <div class="fw-semibold">{{ ev.name }}</div>
+                <div class="text-muted small">
+                  {{ 'Competition' if ev.is_competition else 'Open event' }}
+                  &middot; ₹{{ '%.0f'|format(ev.budget) }}
+                </div>
+              </td>
+              <td>{{ ev.category }}</td>
+              <td>{{ ev.date.strftime('%b %d, %Y') }}</td>
+              <td>{{ ev.venue }}</td>
+              <td class="text-center">{{ reg_count }}</td>
+              <td>
+                {% if ev.status == 'PENDING' %}
+                  <span class="badge bg-warning text-dark">Pending</span>
+                {% elif ev.status == 'APPROVED' %}
+                  <span class="badge bg-success">Approved</span>
+                {% else %}
+                  <span class="badge bg-secondary">Rejected</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <div class="btn-group btn-group-sm">
+                  {% if ev.status != 'APPROVED' %}
+                    <form method="post"
+                          action="{{ url_for('admin.approve_event', event_id=ev.id) }}"
+                          class="d-inline">
+                      <button class="btn btn-outline-success" title="Approve">
+                        <i class="bi bi-check-lg"></i>
+                      </button>
+                    </form>
+                  {% endif %}
+                  {% if ev.status != 'REJECTED' %}
+                    <form method="post"
+                          action="{{ url_for('admin.reject_event', event_id=ev.id) }}"
+                          class="d-inline">
+                      <button class="btn btn-outline-warning" title="Reject">
+                        <i class="bi bi-x-lg"></i>
+                      </button>
+                    </form>
+                  {% endif %}
+                  <a href="{{ url_for('admin.edit_event', event_id=ev.id) }}"
+                     class="btn btn-outline-secondary" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <form method="post"
+                        action="{{ url_for('admin.delete_event', event_id=ev.id) }}"
+                        class="d-inline"
+                        onsubmit="return confirm('Delete &quot;{{ ev.name }}&quot;? This cannot be undone.');">
+                    <button class="btn btn-outline-danger" title="Delete">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="p-4 text-center text-muted">
+      No events match this filter.
+      <a href="{{ url_for('admin.create_event') }}" class="text-brand">Create one</a>.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

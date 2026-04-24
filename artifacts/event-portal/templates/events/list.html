@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Browse events &middot; {{ site_name }}{% endblock %}
+{% block content %}
+<div class="mb-3">
+  <span class="step-pill text-brand fw-semibold">Browse events</span>
+  <h1 class="h3 fw-bold mt-1 mb-0">What's happening on campus</h1>
+  <p class="text-muted small mb-0">
+    Approved events only. Registration opens up in Step 5.
+  </p>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+  <div class="col-auto">
+    <select name="when" class="form-select form-select-sm">
+      <option value="upcoming" {% if active_when == 'upcoming' %}selected{% endif %}>Upcoming</option>
+      <option value="past" {% if active_when == 'past' %}selected{% endif %}>Past</option>
+      <option value="all" {% if active_when == 'all' %}selected{% endif %}>All time</option>
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="category" class="form-select form-select-sm">
+      <option value="">All categories</option>
+      {% for c in categories %}
+        <option value="{{ c }}" {% if active_category == c %}selected{% endif %}>
+          {{ c }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <button class="btn btn-sm btn-brand">Filter</button>
+  </div>
+</form>
+
+{% if events %}
+  <div class="row g-3">
+    {% for row in events %}
+      {% set ev = row.event %}
+      <div class="col-md-6 col-lg-4">
+        <a href="{{ url_for('events.detail', event_id=ev.id) }}"
+           class="text-decoration-none text-reset">
+          <div class="card card-stat p-3 h-100">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="badge bg-light text-brand fw-semibold">
+                {{ ev.category }}
+              </span>
+              {% if ev.is_competition %}
+                <span class="badge bg-warning text-dark">Competition</span>
+              {% endif %}
+            </div>
+            <h5 class="fw-semibold mb-1">{{ ev.name }}</h5>
+            <div class="text-muted small mb-2">
+              <i class="bi bi-calendar-event"></i>
+              {{ ev.date.strftime('%a, %b %d, %Y') }} &middot;
+              <i class="bi bi-geo-alt"></i> {{ ev.venue }}
+            </div>
+            <p class="small mb-2">
+              {{ (ev.description or '')[:120] }}{% if ev.description and ev.description|length > 120 %}…{% endif %}
+            </p>
+            <div class="text-muted small mt-auto">
+              <i class="bi bi-people"></i> {{ row.reg_count }} registered
+            </div>
+          </div>
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card card-stat p-5 text-center">
+    <i class="bi bi-calendar-x text-muted" style="font-size: 2.4rem;"></i>
+    <h5 class="fw-semibold mt-3 mb-1">No events match these filters</h5>
+    <p class="text-muted small mb-0">Try a different category or time range.</p>
+  </div>
+{% endif %}
+{% endblock %}
