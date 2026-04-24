@@ -24,6 +24,27 @@ class EmailNotConfigured(RuntimeError):
     """Raised when GMAIL_USER / GMAIL_APP_PASSWORD are missing."""
 
 
+def _sanitize_credential(raw: str, label: str) -> str:
+    """Strip whitespace (incl. unicode whitespace pasted from web UIs) and
+    validate the result is plain ASCII. Gmail addresses and App Passwords
+    are always ASCII, so anything else means the secret was pasted with
+    invisible junk characters.
+    """
+    # Remove ALL whitespace characters, including non-breaking spaces (\u00a0),
+    # ogonek-like accidents, zero-width chars, etc.
+    cleaned = "".join(ch for ch in raw if not ch.isspace())
+    try:
+        cleaned.encode("ascii")
+    except UnicodeEncodeError as exc:
+        bad = [(i, repr(ch)) for i, ch in enumerate(cleaned) if ord(ch) > 127]
+        raise EmailNotConfigured(
+            f"{label} contains non-ASCII characters at positions {bad}. "
+            "Re-copy the value from Google (App Passwords use plain letters "
+            "only) and update the secret."
+        ) from exc
+    return cleaned
+
+
 def _get_credentials() -> tuple[str, str]:
     user = os.environ.get("GMAIL_USER")
     password = os.environ.get("GMAIL_APP_PASSWORD")
@@ -31,6 +52,8 @@ def _get_credentials() -> tuple[str, str]:
         raise EmailNotConfigured(
             "GMAIL_USER and GMAIL_APP_PASSWORD must be set to send OTP emails."
         )
+    user = _sanitize_credential(user, "GMAIL_USER")
+    password = _sanitize_credential(password, "GMAIL_APP_PASSWORD")
     return user, password
 
 
